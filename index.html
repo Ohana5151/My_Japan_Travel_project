@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>2026 도쿄 & 삿포로 여행 마커 지도</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: row;
+        font-family: Arial, sans-serif;
+      }
+      #sidebar {
+        width: 300px;
+        height: 100vh;
+        overflow-y: auto;
+        background-color: #f5f5f5;
+        padding: 10px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+      }
+      #map {
+        flex: 1;
+        height: 100vh;
+      }
+      .day-info {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #fff;
+        border-left: 5px solid #4CAF50;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+      .day-info:hover {
+        background-color: #e3f2fd;
+      }
+      .extra-info {
+        font-size: 12px;
+        margin-top: 5px;
+        color: #444;
+      }
+      #filters {
+        margin: 10px 0;
+      }
+      .filter-btn {
+        margin: 2px;
+        padding: 5px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      #footer {
+        position: fixed;
+        bottom: 0;
+        left: 300px;
+        width: calc(100% - 300px);
+        background: #fff;
+        border-top: 1px solid #ccc;
+        padding: 8px;
+        font-size: 13px;
+      }
+      @media (max-width: 768px) {
+        body {
+          flex-direction: column;
+        }
+        #sidebar {
+          width: 100%;
+          height: auto;
+          transform: translateY(0);
+        }
+        #map {
+          height: 70vh;
+        }
+        #footer {
+          left: 0;
+          width: 100%;
+        }
+      }
+    </style>
+    <!-- Google Maps API Key 설정 (여행지에 따라 key 변경 필요) -->
+    <!-- 실제 사용 시 본인의 Google Maps API 키로 아래 YOUR_API_KEY 부분을 교체하세요 -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+    <script>
+      function initMap() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 5,
+          center: { lat: 39.5, lng: 141.5 },
+        });
+
+        const dayColors = ["#ff0000", "#ff8000", "#ffff00", "#80ff00", "#00ff00", "#00ffff", "#0080ff", "#0000ff", "#8000ff", "#ff00ff", "#ff0080", "#808080"];
+
+        // 📍 여기에 방문할 여행지를 날짜 순서대로 입력하세요
+        // type: "숙소", "관광", "쇼핑", "공항" 중 선택
+        const itinerary = [
+  { day: 1, name: "하네다공항", lat: 35.5494, lng: 139.7798, type: "공항" },
+  { day: 1, name: "도큐 스테이 시부야 신사", lat: 35.6592, lng: 139.6975, type: "숙소" },
+
+  { day: 2, name: "도큐 스테이 시부야 신사", lat: 35.6592, lng: 139.6975, type: "숙소" },
+  { day: 2, name: "시모키타자와", lat: 35.6617, lng: 139.6689, type: "관광" },
+  { day: 2, name: "아키하바라", lat: 35.6984, lng: 139.7730, type: "쇼핑" },
+
+  { day: 3, name: "도큐 스테이 시부야 신사", lat: 35.6592, lng: 139.6975, type: "숙소" },
+  { day: 3, name: "오다이바", lat: 35.6190, lng: 139.7780, type: "관광" },
+  { day: 3, name: "건담 프론트", lat: 35.6231, lng: 139.7753, type: "관광" },
+
+  { day: 4, name: "도큐 스테이 시부야 신사", lat: 35.6592, lng: 139.6975, type: "숙소" },
+  { day: 4, name: "사이타마 짱구박물관", lat: 35.8224, lng: 139.6011, type: "관광" },
+  { day: 4, name: "돈키호테", lat: 35.6591, lng: 139.7005, type: "쇼핑" },
+
+  { day: 5, name: "도큐 스테이 시부야 신사", lat: 35.6592, lng: 139.6975, type: "숙소" },
+  { day: 5, name: "우에노", lat: 35.7126, lng: 139.7780, type: "관광" },
+  { day: 5, name: "도쿄타워", lat: 35.6586, lng: 139.7454, type: "관광" },
+
+  { day: 6, name: "신치토세공항", lat: 42.7752, lng: 141.6923, type: "공항" },
+  { day: 6, name: "도미 인 프리미엄 삿포로 온천호텔", lat: 43.0582, lng: 141.3544, type: "숙소" },
+
+  { day: 7, name: "도미 인 프리미엄 삿포로 온천호텔", lat: 43.0582, lng: 141.3544, type: "숙소" },
+  { day: 7, name: "오타루 운하", lat: 43.1976, lng: 140.9947, type: "관광" },
+
+  { day: 8, name: "도미 인 프리미엄 삿포로 온천호텔", lat: 43.0582, lng: 141.3544, type: "숙소" },
+  { day: 8, name: "삿포로 맥주 박물관", lat: 43.0686, lng: 141.3544, type: "관광" },
+  { day: 8, name: "삿포로 TV타워", lat: 43.0615, lng: 141.3543, type: "관광" },
+
+  { day: 9, name: "도미 인 프리미엄 삿포로 온천호텔", lat: 43.0582, lng: 141.3544, type: "숙소" },
+  { day: 9, name: "노보리베츠 온천", lat: 42.4995, lng: 141.1457, type: "관광" },
+
+  { day: 10, name: "도미 인 프리미엄 삿포로 온천호텔", lat: 43.0582, lng: 141.3544, type: "숙소" },
+  { day: 10, name: "삿포로 시내", lat: 43.0621, lng: 141.3544, type: "쇼핑" },
+
+  { day: 11, name: "도미 인 프리미엄 삿포로 온천호텔", lat: 43.0582, lng: 141.3544, type: "숙소" },
+  { day: 11, name: "마트 쇼핑", lat: 43.0700, lng: 141.3400, type: "쇼핑" },
+
+  { day: 12, name: "신치토세공항", lat: 42.7752, lng: 141.6923, type: "공항" }
+];
+
+        // 🚆 각 날짜에 사용할 교통수단 입력 (여행지에 따라 수정)
+        const transportTips = {
+          1: "도쿄 모노레일 + JR 야마노테선",
+          2: "케이오 이노카시라선 + JR 중앙선",
+          3: "린카이선 or 유리카모메선",
+          4: "JR 사이쿄선 + 도쿄 메트로",
+          5: "도쿄 메트로 긴자선 + JR 야마노테선",
+          6: "하네다 → 신치토세 국내선 (비행)",
+          7: "JR 하코다테선 (삿포로 ↔ 오타루)",
+          8: "삿포로 지하철 + 도보",
+          9: "JR 삿포로역 → 노보리베츠역 → 도보",
+          10: "삿포로 지하철",
+          11: "삿포로 지하철",
+          12: "JR 급행 → 신치토세공항"
+        };
+
+        // ⏱️ 각 날짜별 예상 도착 시간 및 이동 시간 (원하면 Directions API로 대체 가능)
+        const arrivalTimes = {
+          1: "⏱️ 예상 도착: 11:30 / 이동 약 1시간 30분",
+          2: "⏱️ 예상 도착: 10:30 / 이동 약 30분",
+          3: "⏱️ 예상 도착: 11:00 / 이동 약 40분",
+          4: "⏱️ 예상 도착: 13:00 / 이동 약 1시간",
+          5: "⏱️ 예상 도착: 10:00 / 이동 약 30분",
+          6: "⏱️ 삿포로 도착: 15:00 / 비행 및 이동 약 3시간",
+          7: "⏱️ 예상 도착: 11:00 / 이동 약 1시간",
+          8: "⏱️ 예상 도착: 11:00 / 이동 약 20분",
+          9: "⏱️ 예상 도착: 15:00 / 이동 약 2시간",
+          10: "⏱️ 예상 도착: 11:00 / 이동 약 15분",
+          11: "⏱️ 예상 도착: 10:30 / 이동 약 15분",
+          12: "⏱️ 출발 예정: 10:00 / 이동 약 1시간"
+        };
+
+        // 🍜 추천 활동 또는 맛집 등 (선택사항)
+        const recommendations = {
+          2: "🍜 시모키타자와 라멘지로, 빈티지숍",
+          4: "🛍️ 돈키호테에서 면세 쇼핑",
+          7: "🍣 오타루 마루카츠 시장에서 카이센동",
+          9: "♨️ 노보리베츠 지옥계곡 산책"
+        };
+
+        // 💰 하루 예상 경비 항목 (교통/식비/쇼핑/숙박 등 여행지에 따라 수정)
+        const dailyCosts = {
+          1: "💰 교통: ¥1,000 / 식비: ¥2,000 / 숙박: ¥12,000",
+          2: "💰 교통: ¥800 / 식비: ¥3,000 / 쇼핑: ¥5,000 / 숙박: ¥12,000",
+          3: "💰 교통: ¥1,200 / 식비: ¥2,500 / 입장료: ¥2,000 / 숙박: ¥12,000",
+          4: "💰 교통: ¥1,500 / 식비: ¥2,500 / 입장료: ¥1,500 / 쇼핑: ¥4,000 / 숙박: ¥12,000",
+          5: "💰 교통: ¥1,000 / 식비: ¥2,500 / 입장료: ¥2,000 / 숙박: ¥12,000",
+          6: "💰 항공: ¥10,000 / 교통: ¥1,000 / 식비: ¥2,000 / 숙박: ¥11,000",
+          7: "💰 교통: ¥1,500 / 식비: ¥3,000 / 숙박: ¥11,000",
+          8: "💰 교통: ¥1,000 / 식비: ¥2,500 / 입장료: ¥1,000 / 숙박: ¥11,000",
+          9: "💰 교통: ¥2,500 / 식비: ¥3,000 / 온천: ¥1,000 / 숙박: ¥11,000",
+          10: "💰 교통: ¥800 / 식비: ¥2,000 / 쇼핑: ¥3,000 / 숙박: ¥11,000",
+          11: "💰 교통: ¥500 / 식비: ¥2,000 / 쇼핑: ¥4,000 / 숙박: ¥11,000",
+          12: "💰 교통: ¥1,500 / 식비: ¥2,000"
+        };
+
+        const markers = [];
+        const pathCoordsByDay = {};
+        const sidebar = document.getElementById("sidebar");
+        const infoWindow = new google.maps.InfoWindow();
+
+        itinerary.forEach((loc) => {
+          if (!pathCoordsByDay[loc.day]) pathCoordsByDay[loc.day] = [];
+          pathCoordsByDay[loc.day].push({ lat: loc.lat, lng: loc.lng });
+
+          const marker = new google.maps.Marker({
+            position: { lat: loc.lat, lng: loc.lng },
+            map,
+            title: `Day ${loc.day}: ${loc.name}`,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 6,
+              fillColor: loc.type === "숙소" ? "#000000" : dayColors[loc.day - 1],
+              fillOpacity: 1,
+              strokeColor: "#000",
+              strokeWeight: 1
+            }
+          });
+
+          marker.customType = loc.type;
+          markers.push(marker);
+
+          marker.addListener("click", () => {
+            infoWindow.setContent(`<strong>Day ${loc.day}</strong><br>${loc.name}<br>교통수단: ${transportTips[loc.day] || "-"}`);
+            infoWindow.open(map, marker);
+          });
+        });
+
+        Object.entries(pathCoordsByDay).forEach(([day, coords]) => {
+          new google.maps.Polyline({
+            path: coords,
+            geodesic: true,
+            strokeColor: dayColors[day - 1],
+            strokeOpacity: 0.9,
+            strokeWeight: 3,
+            map
+          });
+
+          const div = document.createElement("div");
+          div.className = "day-info";
+          div.innerHTML = `<strong>Day ${day}</strong><br>교통수단: ${transportTips[day] || "-"}`;
+          if (arrivalTimes[day]) {
+            div.innerHTML += `<div class='extra-info'>${arrivalTimes[day]}</div>`;
+          }
+          if (recommendations[day]) {
+            div.innerHTML += `<div class='extra-info'>${recommendations[day]}</div>`;
+          }
+          if (dailyCosts[day]) {
+            div.innerHTML += `<div class='extra-info'>${dailyCosts[day]}</div>`;
+          }
+          div.onclick = () => {
+            map.panTo(coords[0]);
+            map.setZoom(12);
+          };
+          sidebar.appendChild(div);
+        });
+
+        const filterDiv = document.createElement("div");
+        filterDiv.id = "filters";
+        filterDiv.innerHTML = ["숙소", "관광", "쇼핑", "공항", "전체"].map(t => `<button class='filter-btn' onclick='filterMarkers("${t}")'>${t}</button>`).join("");
+        sidebar.prepend(filterDiv);
+
+        window.filterMarkers = (type) => {
+          markers.forEach(m => {
+            m.setVisible(type === "전체" || m.customType === type);
+          });
+        };
+      }
+
+      window.onload = () => {
+        
+
+      function calculateDurations() {
+        const service = new google.maps.DirectionsService();
+        const output = {};
+        const grouped = {};
+        itinerary.forEach(loc => {
+          if (!grouped[loc.day]) grouped[loc.day] = [];
+          grouped[loc.day].push(loc);
+        });
+
+        Object.entries(grouped).forEach(([day, places]) => {
+          for (let i = 0; i < places.length - 1; i++) {
+            const origin = places[i];
+            const destination = places[i + 1];
+            service.route({
+              origin: { lat: origin.lat, lng: origin.lng },
+              destination: { lat: destination.lat, lng: destination.lng },
+              travelMode: google.maps.TravelMode.TRANSIT,
+              transitOptions: { modes: ['RAIL'], departureTime: new Date() }
+            }, (result, status) => {
+              if (status === 'OK') {
+                const duration = result.routes[0].legs[0].duration.text;
+                alert(`Day ${day} - ${origin.name} → ${destination.name}: ${duration}`);
+              } else {
+                console.warn(`Error fetching directions: ${status}`);
+              }
+            });
+          }
+        });
+      }
+        if (!navigator.onLine) {
+          alert("⚠️ 인터넷 연결이 끊겼습니다. 지도의 일부 기능이 제한됩니다. 온라인 상태에서 새로고침해 주세요.");
+        }
+        initMap();
+      };
+    </script>
+  </head>
+  <body>
+    <div id="sidebar">
+      <h2>여행 요약</h2>
+    </div>
+    <div id="map"></div>
+    <div id="footer">
+      📍 오늘의 추천: 지옥계곡에서 온천 후 카이센동 먹기! | ☀️ 날씨: <a href="https://weather.yahoo.co.jp/weather/jp/1/" target="_blank">일본 날씨</a> | 🖨️ <a href="#" onclick="window.print()">PDF로 저장</a>
+    <button onclick="calculateDurations()" style="position:fixed; bottom:50px; left:320px; z-index:9999; padding:8px 16px; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer;">소요시간 계산하기</button>
+</div>
+</body>
+</html>
