@@ -88,6 +88,12 @@
     <!-- 실제 사용 시 본인의 Google Maps API 키로 아래 YOUR_API_KEY 부분을 교체하세요 -->
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
     <script>
+      // 모바일에서 데스크톱 보기 유도
+      if (window.innerWidth < 768) {
+        alert("📱 현재 페이지는 데스크톱 환경에 최적화되어 있습니다.
+모바일에서는 브라우저 메뉴에서 '데스크톱 사이트 보기'로 전환해주세요!");
+      }
+
       function initMap() {
         const map = new google.maps.Map(document.getElementById("map"), {
           zoom: 5,
