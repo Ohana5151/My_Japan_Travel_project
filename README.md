@@ -41,9 +41,3 @@ const dailyCosts = {...};       // 예상 경비
 
 - 반응형 웹 디자인 적용
 - GitHub Pages 또는 Netlify에 업로드 시 스마트폰에서도 완벽하게 작동
-
-## 📦 배포 예시 (GitHub Pages)
-
-1. 저장소를 `Public`으로 변경
-2. `Settings → Pages → Branch: main / root` 설정
-3. 발급된 주소로 접속 (예: `https://사용자명.github.io/저장소명/`)
